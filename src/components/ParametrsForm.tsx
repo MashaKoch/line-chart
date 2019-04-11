@@ -9,30 +9,18 @@ class ParametrsForm extends React.Component<IParametrsFormProps, IParametrsFormS
     super(props);    
     this.state = {
         amountPoint: this.props.amountPoint,
-        minX: this.props.minX,
-        maxX: this.props.maxX,
         minY: this.props.minY,
         maxY: this.props.maxY,
         checkedGrid: this.props.checkedGrid,
-        checkedLabelAxis: this.props.checkedLabelAxis
+        checkedLabelAxis: this.props.checkedLabelAxis,
+        width: this.props.width,
+        height: this.props.height
     }
   }
 
   onAmountPointChange = (event: any) : void => {
     this.setState({
       amountPoint: event.target.value
-    })
-  };
-
-  onMinXChange = (event: any) : void => {
-    this.setState({
-      minX: event.target.value
-    })
-  };
-
-  onMaxXChange = (event: any) : void => {
-    this.setState({
-      maxX: event.target.value
     })
   };
 
@@ -62,6 +50,18 @@ class ParametrsForm extends React.Component<IParametrsFormProps, IParametrsFormS
     });
   }
 
+  onWidthChange = (event: any) : void => {
+    this.setState({
+      width: event.target.value
+    })
+  }
+
+  onHeightChange = (event: any) : void => {
+    this.setState({
+      height: event.target.value
+    })
+  }
+
   render() {
     return (
       <div id="controlPanel">
@@ -73,17 +73,7 @@ class ParametrsForm extends React.Component<IParametrsFormProps, IParametrsFormS
           />
         </p>
         <p>
-          <InputParamField label="Диапазон начений по оси X: от "
-                          id="minX"
-                          value={this.state.minX}
-                          onChange={this.onMinXChange} />
-          <InputParamField label=" до "
-                          id="maxX"
-                          value={this.state.maxX}
-                          onChange={this.onMaxXChange} />
-        </p>
-        <p>
-          <InputParamField label="Диапазон начений по оси Y: от "
+          <InputParamField label="Диапазон значений по оси Y: от "
                           id="minY"
                           value={this.state.minY}
                           onChange={this.onMinYChange} />
@@ -91,6 +81,33 @@ class ParametrsForm extends React.Component<IParametrsFormProps, IParametrsFormS
                           id="maxY"
                           value={this.state.maxY}
                           onChange={this.onMaxYChange} />
+        </p>
+        <p>
+          <input type="button" value="Сгенерировать новые точки и перестроить график" onClick={() => { 
+            this.props.generationPoints(this.state.amountPoint, 
+                                  this.state.minY, 
+                                  this.state.maxY)}} />
+        </p>
+        <p>
+          Размеры области отображения данных:
+        </p>
+        <p>
+          <InputParamField label="Ширина"
+                          id="width"
+                          value={this.state.width}
+                          onChange={this.onWidthChange} 
+                          />
+          <InputParamField label="Высота"
+                          id="height"
+                          value={this.state.height}
+                          onChange={this.onHeightChange} 
+                          />
+        </p>
+        <p>
+          <input type="button" value="Изменить размер области отображения" onClick={() => { 
+            this.props.changeSize(this.state.width,
+                                  this.state.height,
+                                  )}} />
         </p>
         <p>
           <CheckboxField label="Сетка" 
@@ -101,16 +118,6 @@ class ParametrsForm extends React.Component<IParametrsFormProps, IParametrsFormS
                           idCbx="tags" 
                           checked={this.state.checkedLabelAxis} 
                           onChange={this.onLabelChange} />
-        </p>
-        <p>
-          <input type="button" value="Перестроить график" onClick={() => { 
-            this.props.updateData(this.state.amountPoint, 
-                                  this.state.minX, 
-                                  this.state.maxX, 
-                                  this.state.minY, 
-                                  this.state.maxY, 
-                                  this.state.checkedGrid,
-                                  this.state.checkedLabelAxis)}} />
         </p>
       </div>
     );

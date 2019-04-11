@@ -4,28 +4,48 @@ import React from "react";
 import ParametrsForm from "./ParametrsForm"
 import Chart from "./Chart"
 
+declare var d3: any;
+
 class App extends React.Component<any, IAppState> {
   constructor(props:any) {
     super(props);
-        this.state = {
-          amountPoint: 20,
-          minX: 0,
-          maxX: 50,
-          minY: 0,
-          maxY: 50,
-          checkedGrid: true,
-          checkedLabelAxis: true,
-          reDraw: false
-          };
-  }
+    this.state = {
+      amountPoint: 21,
+      minY: 0,
+      maxY: 100,
+      checkedGrid: true,
+      checkedLabelAxis: true,
+      reDraw: false,
+      points: [],
+      width: 960,
+      height: 500
+      };
+  };
 
-  updateData = (amount:number, valMinX:number, valMaxX:number, valMinY:number, valMaxY:number, chkGrid:boolean, chkLabel:boolean) : void => {
-    this.setState({ 
+  // Первоначальная вырисовка графика
+  componentDidMount() {
+    this.generationPoints(this.state.amountPoint, this.state.minY, this.state.maxY);
+  };
+
+  generationPoints = (amount:number, minY:number, maxY:number): void => {
+    const min : number = Number(minY);
+    const max : number = Number(maxY);
+
+    var data = d3.range(amount).map(function(i:number) { return {"x": i+1, "y": (Math.random() * (max - min) + min)} })
+
+    this.setState({
+      points: data,
       amountPoint: amount,
-      minX: valMinX,
-      maxX: valMaxX,
-      minY: valMinY,
-      maxY: valMaxY,
+      minY: min,
+      maxY: max,
+      reDraw: true
+    })
+  };
+
+  changeSize = (width:number, height:number) : void => {
+    this.setState({ 
+      width: width,
+      height: height,
       reDraw: true
     })
  };
@@ -42,7 +62,8 @@ class App extends React.Component<any, IAppState> {
     return (
     <div>
       <h1>Визуализация линейной диаграммы на рандомно сгенерированных данных</h1>
-      <ParametrsForm updateData={this.updateData} 
+      <ParametrsForm changeSize={this.changeSize} 
+                    generationPoints={this.generationPoints}
                     updateGridAndLabel={this.updateGridAndLabel}
                     {... this.state}
       />

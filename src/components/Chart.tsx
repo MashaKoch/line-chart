@@ -7,26 +7,30 @@ declare var d3: any;
 class Chart extends React.Component <IAppState> {
   constructor(props:IAppState) {
     super(props);
+    this.state = {
+      checkedGrid : this.props.checkedGrid,
+      checkedLabelAxis: this.props.checkedLabelAxis
+    }
   }
 
-  // Первоначальная вырисовка графика
-  componentDidMount() {
-    this.drawChart();
-  };
+  // // Первоначальная вырисовка графика
+  // componentDidMount() {
+  //   this.drawChart();
+  // };
 
-  // Перерисовка графика после обновления компонента по условию либо отображение меток и сетки
   componentDidUpdate() {
     if (this.props.reDraw) {
       this.drawChart();
-    } 
+    }  
 
     if (this.props.checkedGrid) {
-      d3.selectAll(".grid .tick line").attr("display", "block");
+      d3.selectAll(" .tick line").attr("display", "block");
     } else {
-      d3.selectAll(".grid .tick line").attr("display", "none");
+      d3.selectAll(" .tick line").attr("display", "none");
     }
     if (this.props.checkedLabelAxis) {
       d3.selectAll(".axis text").attr("display", "block");
+
     } else {
       d3.selectAll(".axis text").attr("display", "none");
     }
@@ -39,144 +43,140 @@ class Chart extends React.Component <IAppState> {
     );
   }
 
-
   drawChart = () => {   
     const amountPoint : number = Number(this.props.amountPoint);
-    const minX : number = Number(this.props.minX);
-    const maxX : number = Number(this.props.maxX);
     const minY : number = Number(this.props.minY);
     const maxY : number = Number(this.props.maxY);
+    const widthSVG : number = Number(this.props.width);
+    const heightSVG : number = Number(this.props.height);
+    let data: point[] = this.props.points;
 
-    function getRandomArbitrary(min:number, max:number) : number {
-      return (Math.random() * (max - min) + min);
-    }
-
-    let x: number[] = [];
-    let y: number[] = []; 
-    
-    for(let i=0; i<amountPoint; i++) {
-        x.push(getRandomArbitrary(minX,maxX));
-        y.push(getRandomArbitrary(minY,maxY))
-    }    
-
-    x.sort(d3.ascending);
-    
-    let data : {x: number[], y: number[]}[] = [{x: x, y: y}];
-
+    //************************************************************
+    // Очистка SVG
+    //************************************************************
     d3.selectAll("svg > *").remove();
 
-    d3.select("svg")
-        .datum(data)
-        .call(d3_xy_chart());
+    //************************************************************
+    // Создание осей и отступов и подключение функции зуммирования
+    //************************************************************
+    let margin : {top: number; right: number; bottom: number; left: number} = 
+                        {top: 20, right: 10, bottom: 30, left: 50}, 
+    width : number = widthSVG- margin.left - margin.right,
+    height : number = heightSVG - margin.top - margin.bottom; 
 
-    function d3_xy_chart() : any {
-      let width : number = 960,  
-          height : number = 500, 
-          xlabel : string = "X Axis",
-          ylabel : string = "Y Axis" ;
-      
-      function chart(selection:any) : void {
-        selection.each(function(datasets: any) {
-          let margin : {top: number; right: number; bottom: number; left: number} = 
-                        {top: 20, right: 80, bottom: 30, left: 50}, 
-              innerwidth: number = width - margin.left - margin.right,
-              innerheight: number = height - margin.top - margin.bottom ;
-          
-          let x_scale: any = d3.scale.linear()
-              .range([0, innerwidth])
-              .domain([minX, maxX]);
+    var xScale = d3.scale.linear()
+    .domain([0, amountPoint+1])
+    .range([0, width]);
 
-          let y_scale: any = d3.scale.linear()
-              .range([innerheight, 0])
-              .domain([minY, maxY]);
-                      
-          let color_scale : string= "#1f77b4";
+    var yScale = d3.scale.linear()
+    .domain([minY, maxY])
+    .range([height, 0]);
 
-          let x_axis: any = d3.svg.axis()
-              .scale(x_scale)
-              .orient("bottom") ;
+    var xAxis = d3.svg.axis()
+    .scale(xScale)
+    .tickSize(-height)
+    .tickPadding(10)	
+    .orient("bottom");	
 
-          let y_axis: any = d3.svg.axis()
-              .scale(y_scale)
-              .orient("left") ;
+    var yAxis = d3.svg.axis()
+    .scale(yScale)
+    .tickPadding(10)
+    .tickSize(-width)
+    .orient("left");
+    // .style("display:none")
 
-          let x_grid: any = d3.svg.axis()
-              .scale(x_scale)
-              .orient("bottom")
-              .tickSize(-innerheight)
-              .tickFormat("") ;
+    var zoom = d3.behavior.zoom()
+    .x(xScale)
+    .y(yScale)
+    .scaleExtent([1, 10])
+    .on("zoom", zoomed);    
 
-          let y_grid: any = d3.svg.axis()
-              .scale(y_scale)
-              .orient("left") 
-              .tickSize(-innerwidth)
-              .tickFormat("") ;
+    //************************************************************
+    // Создание SVG-объекта
+    //************************************************************	
+    var svg = d3.select("svg")
+    .call(zoom)
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-          let draw_line: any = d3.svg.line()
-              .x(function(d: any): number { return x_scale(d[0]); })
-              .y(function(d: any): number { return y_scale(d[1]); }) ;
+    svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
 
-          let svg: any = d3.select("svg")
-              .attr("width", width)
-              .attr("height", height)
-              .append("g")
-              .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    svg.append("g")
+    .attr("class", "y axis")
+    .call(yAxis);
 
-          // Сетка и метки
-          svg.append("g")
-              .attr("class", "x grid")
-              .attr("transform", "translate(0," + innerheight + ")")
-              .call(x_grid) ;
+    svg.append("clipPath")
+    .attr("id", "clip")
+    .append("rect")
+    .attr("width", width)
+    .attr("height", height);
 
-          svg.append("g")
-              .attr("class", "y grid")
-              .call(y_grid) ;
+    //************************************************************
+    // Рисование line-объекта с данными на SVG
+    //************************************************************
+    var line = d3.svg.line()
+    // .interpolate("linear")
+    .x(function(d:point) {return xScale(d.x); }) // set the x values for the line generator
+    .y(function(d:point) { return yScale(d.y); }) // set the y values for the line generator 
 
-          svg.append("g")
-              .attr("class", "x axis")
-              .attr("transform", "translate(0," + innerheight + ")") 
-              .call(x_axis)
-              .append("text")
-              .attr("dy", "-.71em")
-              .attr("x", innerwidth)
-              .style("text-anchor", "end")
-              .text(xlabel) ;
-          
-          svg.append("g")
-              .attr("class", "y axis")
-              .call(y_axis)
-              .append("text")
-              .attr("transform", "rotate(-90)")
-              .attr("y", 6)
-              .attr("dy", "0.71em")
-              .style("text-anchor", "end")
-              .text(ylabel) ;
+    svg.append("path")
+    .datum(data)
+    .attr("class", "line")
+    .attr("clip-path", "url(#clip)")
+    .attr('stroke', 'steelblue')
+    .attr("d", line);	
 
-          // Точки
-          svg.append("g").selectAll(".dot")
-              .data(d3.zip(data[0].x, data[0].y))
-              .enter().append("circle")
-              .attr("class", "dot")
-              .attr("r", 3.5)
-              .attr("cx", function(d: any):number { return x_scale(d[0]) })
-              .attr("cy", function(d: any):number { return y_scale(d[1]) })                        
+    //************************************************************
+    // Рисование точек
+    //************************************************************
+    var points = svg.selectAll('.dots')
+    .data([data])
+    .enter()
+    .append("g")
+    .attr("class", "dots")
+    .attr("clip-path", "url(#clip)");	
 
-          // График
-          let data_lines: any = svg.selectAll(".d3_xy_chart_line")
-              .data(datasets.map(function(d: any) {    
-                  return d3.zip(d.x, d.y);}))
-              .enter().append("g")
-              .attr("class", "d3_xy_chart_line") ;
-          
-          data_lines.append("path")
-              .attr("class", "line")
-              .attr("d", function(d: any) {
-                  return draw_line(d); })
-              .attr("stroke", color_scale) ;  
-      }) ;
-    }
-    return chart;
-    }         
+    points.selectAll('.dot')
+    .data(data)
+    .enter()
+    .append('circle')
+    .attr('class','dot')
+    .attr("r", 2.5)
+    .attr('fill', "black")	
+    .attr("transform", function(d:point) { 
+      return "translate(" + xScale(d.x) + "," + yScale(d.y) + ")"; }
+    );   
+
+    //************************************************************
+    // Функция зуммирования
+    //************************************************************
+
+    function zoomed() : void {
+      svg.select(".x.axis").call(xAxis);
+      svg.select(".y.axis").call(yAxis);   
+      svg.selectAll('path.line').attr('d', line);  
+     
+      points.selectAll('circle').attr("transform", function(d:point) { 
+        return "translate(" + xScale(d.x) + "," + yScale(d.y) + ")"; }
+      );  
+
+      // добавление и удаление сетки и меток
+      if (d3.select("#grid").property("checked")) {
+        d3.selectAll(" .tick line").attr("display", "block");
+      } else {
+        d3.selectAll(" .tick line").attr("display", "none");
+      }
+      if (d3.select("#tags").property("checked")) {
+        d3.selectAll(".axis text").attr("display", "block");
+      } else {
+        d3.selectAll(".axis text").attr("display", "none");
+      }
+    }   
   }
 }
 
