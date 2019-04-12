@@ -13,11 +13,6 @@ class Chart extends React.Component <IAppState> {
     }
   }
 
-  // // Первоначальная вырисовка графика
-  // componentDidMount() {
-  //   this.drawChart();
-  // };
-
   componentDidUpdate() {
     if (this.props.reDraw) {
       this.drawChart();
@@ -64,37 +59,36 @@ class Chart extends React.Component <IAppState> {
     width : number = widthSVG- margin.left - margin.right,
     height : number = heightSVG - margin.top - margin.bottom; 
 
-    var xScale = d3.scale.linear()
+    let xScale : any = d3.scale.linear()
     .domain([0, amountPoint+1])
     .range([0, width]);
 
-    var yScale = d3.scale.linear()
-    .domain([minY, maxY])
+    let yScale : any = d3.scale.linear()
+    .domain([minY-5, maxY+5])
     .range([height, 0]);
 
-    var xAxis = d3.svg.axis()
+    let xAxis : any = d3.svg.axis()
     .scale(xScale)
     .tickSize(-height)
     .tickPadding(10)	
-    .orient("bottom");	
+    .orient("bottom");	  
 
-    var yAxis = d3.svg.axis()
+    let yAxis : any = d3.svg.axis()
     .scale(yScale)
     .tickPadding(10)
     .tickSize(-width)
     .orient("left");
-    // .style("display:none")
 
-    var zoom = d3.behavior.zoom()
+    let zoom : any = d3.behavior.zoom()
     .x(xScale)
     .y(yScale)
     .scaleExtent([1, 10])
-    .on("zoom", zoomed);    
+    .on("zoom", zoomed);     
 
     //************************************************************
     // Создание SVG-объекта
     //************************************************************	
-    var svg = d3.select("svg")
+    let svg : any = d3.select("svg")
     .call(zoom)
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
@@ -119,10 +113,9 @@ class Chart extends React.Component <IAppState> {
     //************************************************************
     // Рисование line-объекта с данными на SVG
     //************************************************************
-    var line = d3.svg.line()
-    // .interpolate("linear")
-    .x(function(d:point) {return xScale(d.x); }) // set the x values for the line generator
-    .y(function(d:point) { return yScale(d.y); }) // set the y values for the line generator 
+    let line : any = d3.svg.line()
+    .x(function(d:point) {return xScale(d.x); })
+    .y(function(d:point) { return yScale(d.y); })
 
     svg.append("path")
     .datum(data)
@@ -134,7 +127,7 @@ class Chart extends React.Component <IAppState> {
     //************************************************************
     // Рисование точек
     //************************************************************
-    var points = svg.selectAll('.dots')
+    let points = svg.selectAll('.dots')
     .data([data])
     .enter()
     .append("g")
@@ -161,7 +154,7 @@ class Chart extends React.Component <IAppState> {
       svg.select(".y.axis").call(yAxis);   
       svg.selectAll('path.line').attr('d', line);  
      
-      points.selectAll('circle').attr("transform", function(d:point) { 
+      points.selectAll('circle').attr("transform", function(d:any) { 
         return "translate(" + xScale(d.x) + "," + yScale(d.y) + ")"; }
       );  
 

@@ -11,8 +11,8 @@ class App extends React.Component<any, IAppState> {
     super(props);
     this.state = {
       amountPoint: 21,
-      minY: 0,
-      maxY: 100,
+      minY: 5,
+      maxY: 75,
       checkedGrid: true,
       checkedLabelAxis: true,
       reDraw: false,
@@ -31,7 +31,7 @@ class App extends React.Component<any, IAppState> {
     const min : number = Number(minY);
     const max : number = Number(maxY);
 
-    var data = d3.range(amount).map(function(i:number) { return {"x": i+1, "y": (Math.random() * (max - min) + min)} })
+    let data : point[] = d3.range(amount).map(function(i:number) { return {"x": i+1, "y": (Math.random() * (max - min) + min)} })
 
     this.setState({
       points: data,
